@@ -636,339 +636,349 @@
   </footer>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      setDoc,
-      getDoc,
-      collection,
-      addDoc,
-      getDocs,
-      serverTimestamp,
-      query,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut,
+    onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    setDoc,
+    getDoc,
+    collection,
+    addDoc,
+    getDocs,
+    serverTimestamp,
+    query,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAjrj8IQ66Hy1pZ-k6aYHgrTsSKOMNmlPI",
-      authDomain: "llrfans.firebaseapp.com",
-      projectId: "llrfans",
-      storageBucket: "llrfans.firebasestorage.app",
-      messagingSenderId: "807887411037",
-      appId: "1:807887411037:web:6d6ea6a2e363130509fab4"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjrj8IQ66Hy1pZ-k6aYHgrTsSKOMNmlPI",
+    authDomain: "llrfans.firebaseapp.com",
+    projectId: "llrfans",
+    storageBucket: "llrfans.firebasestorage.app",
+    messagingSenderId: "807887411037",
+    appId: "1:807887411037:web:6d6ea6a2e363130509fab4"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    let currentUser = null;
+  let currentUser = null;
 
-    const approvedEmails = [
-      "ethan02px2035@saschina.org",
-      "lukas01px2035@saschina.org"
-    ];
+  const approvedEmails = [
+    "ethan02px2035@saschina.org",
+    "lukas01px2035@saschina.org"
+  ];
 
-    const tabButtons = document.querySelectorAll(".tab-btn");
-    const sections = document.querySelectorAll(".tab-section");
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const sections = document.querySelectorAll(".tab-section");
 
-    function showTab(tabId) {
-      sections.forEach(section => {
-        section.classList.toggle("hidden", section.id !== tabId);
-      });
-
-      tabButtons.forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabId);
-      });
-    }
+  function showTab(tabId) {
+    sections.forEach(section => {
+      section.classList.toggle("hidden", section.id !== tabId);
+    });
 
     tabButtons.forEach(btn => {
-      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+      btn.classList.toggle("active", btn.dataset.tab === tabId);
     });
+  }
 
-    function setText(id, text) {
-      document.getElementById(id).textContent = text;
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => showTab(btn.dataset.tab));
+  });
+
+  function setText(id, text) {
+    document.getElementById(id).textContent = text;
+  }
+
+  function getInitials(name, email) {
+    if (name && name.trim()) return name.trim().charAt(0).toUpperCase();
+    if (email && email.trim()) return email.trim().charAt(0).toUpperCase();
+    return "?";
+  }
+
+  function isApprovedMember(user) {
+    if (!user || !user.email) return false;
+    return approvedEmails.includes(user.email.toLowerCase());
+  }
+
+  function validUrl(str) {
+    try {
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async function loadProfile(user) {
+    if (!user) {
+      setText("profileHeading", "Your Profile");
+      setText("profileMini", "Log in first");
+      setText("profileStatus", "You need to log in.");
+      setText("profileAvatar", "?");
+      document.getElementById("displayName").value = "";
+      document.getElementById("role").value = "";
+      document.getElementById("bio").value = "";
+      return;
     }
 
-    function getInitials(name, email) {
-      if (name && name.trim()) return name.trim().charAt(0).toUpperCase();
-      if (email && email.trim()) return email.trim().charAt(0).toUpperCase();
-      return "?";
+    const ref = doc(db, "members", user.uid);
+    const snap = await getDoc(ref);
+
+    if (snap.exists()) {
+      const data = snap.data();
+      document.getElementById("displayName").value = data.displayName || "";
+      document.getElementById("role").value = data.role || "";
+      document.getElementById("bio").value = data.bio || "";
+      setText("profileHeading", data.displayName || "Your Profile");
+      setText("profileMini", user.email);
+      setText("profileAvatar", getInitials(data.displayName, user.email));
+      setText("profileStatus", "Profile loaded.");
+    } else {
+      setText("profileHeading", "Your Profile");
+      setText("profileMini", user.email);
+      setText("profileAvatar", getInitials("", user.email));
+      setText("profileStatus", "No saved profile yet.");
+    }
+  }
+
+  async function saveProfile() {
+    if (!currentUser) {
+      setText("profileStatus", "Log in first.");
+      return;
     }
 
-    function isApprovedMember(user) {
-      if (!user || !user.email) return false;
-      return approvedEmails.includes(user.email.toLowerCase());
+    const displayName = document.getElementById("displayName").value.trim();
+    const role = document.getElementById("role").value.trim();
+    const bio = document.getElementById("bio").value.trim();
+
+    if (!displayName || !role) {
+      setText("profileStatus", "Name and role are required.");
+      return;
     }
 
-    function validUrl(str) {
-      try {
-        new URL(str);
-        return true;
-      } catch {
-        return false;
-      }
+    try {
+      await setDoc(doc(db, "members", currentUser.uid), {
+        uid: currentUser.uid,
+        email: currentUser.email,
+        displayName,
+        role,
+        bio,
+        updatedAt: serverTimestamp()
+      });
+
+      setText("profileHeading", displayName);
+      setText("profileMini", currentUser.email);
+      setText("profileAvatar", getInitials(displayName, currentUser.email));
+      setText("profileStatus", "Profile saved.");
+      await loadMembers();
+    } catch (err) {
+      setText("profileStatus", err.message);
     }
+  }
 
-    async function loadProfile(user) {
-      if (!user) {
-        setText("profileHeading", "Your Profile");
-        setText("profileMini", "Log in first");
-        setText("profileStatus", "You need to log in.");
-        setText("profileAvatar", "?");
-        document.getElementById("displayName").value = "";
-        document.getElementById("role").value = "";
-        document.getElementById("bio").value = "";
-        return;
-      }
+  async function loadMembers() {
+    const wrap = document.getElementById("membersList");
+    wrap.innerHTML = "";
 
-      const ref = doc(db, "members", user.uid);
-      const snap = await getDoc(ref);
+    try {
+      const snap = await getDocs(collection(db, "members"));
+      let count = 0;
 
-      if (snap.exists()) {
-        const data = snap.data();
-        document.getElementById("displayName").value = data.displayName || "";
-        document.getElementById("role").value = data.role || "";
-        document.getElementById("bio").value = data.bio || "";
-        setText("profileHeading", data.displayName || "Your Profile");
-        setText("profileMini", user.email);
-        setText("profileAvatar", getInitials(data.displayName, user.email));
-        setText("profileStatus", "Profile loaded.");
-      } else {
-        setText("profileHeading", "Your Profile");
-        setText("profileMini", user.email);
-        setText("profileAvatar", getInitials("", user.email));
-        setText("profileStatus", "No saved profile yet.");
-      }
-    }
+      snap.forEach(docSnap => {
+        count++;
+        const data = docSnap.data();
 
-    async function saveProfile() {
-      if (!currentUser) {
-        setText("profileStatus", "Log in first.");
-        return;
-      }
-
-      const displayName = document.getElementById("displayName").value.trim();
-      const role = document.getElementById("role").value.trim();
-      const bio = document.getElementById("bio").value.trim();
-
-      if (!displayName || !role) {
-        setText("profileStatus", "Name and role are required.");
-        return;
-      }
-
-      try {
-        await setDoc(doc(db, "members", currentUser.uid), {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          displayName,
-          role,
-          bio,
-          updatedAt: serverTimestamp()
-        });
-
-        setText("profileHeading", displayName);
-        setText("profileMini", currentUser.email);
-        setText("profileAvatar", getInitials(displayName, currentUser.email));
-        setText("profileStatus", "Profile saved.");
-        await loadMembers();
-      } catch (err) {
-        setText("profileStatus", err.message);
-      }
-    }
-
-    async function loadMembers() {
-      const wrap = document.getElementById("membersList");
-      wrap.innerHTML = "";
-
-      try {
-        const snap = await getDocs(collection(db, "members"));
-        let count = 0;
-
-        snap.forEach(docSnap => {
-          count++;
-          const data = docSnap.data();
-
-          const card = document.createElement("div");
-          card.className = "card member-card";
-          card.innerHTML = `
-            <div class="profile-top" style="margin-bottom:4px;">
-              <div class="avatar">${getInitials(data.displayName, data.email)}</div>
-              <div>
-                <h3 style="margin:0;">${data.displayName || "Unnamed Member"}</h3>
-                <div class="mini">${data.email || ""}</div>
-              </div>
+        const card = document.createElement("div");
+        card.className = "card member-card";
+        card.innerHTML = `
+          <div class="profile-top" style="margin-bottom:4px;">
+            <div class="avatar">${getInitials(data.displayName, data.email)}</div>
+            <div>
+              <h3 style="margin:0;">${data.displayName || "Unnamed Member"}</h3>
+              <div class="mini">${data.email || ""}</div>
             </div>
-            <span class="tag">${data.role || "Member"}</span>
-            <p>${data.bio || "No bio yet."}</p>
-          `;
-          wrap.appendChild(card);
-        });
+          </div>
+          <span class="tag">${data.role || "Member"}</span>
+          <p>${data.bio || "No bio yet."}</p>
+        `;
+        wrap.appendChild(card);
+      });
 
-        setText("memberCount", count.toString());
+      setText("memberCount", count.toString());
 
-        if (count === 0) {
-          wrap.innerHTML = `<div class="card"><p>No members yet. Save a profile first.</p></div>`;
-        }
-      } catch (err) {
-        wrap.innerHTML = `<div class="card"><p>Error loading members: ${err.message}</p></div>`;
+      if (count === 0) {
+        wrap.innerHTML = `<div class="card"><p>No members yet. Save a profile first.</p></div>`;
       }
+    } catch (err) {
+      wrap.innerHTML = `<div class="card"><p>Error loading members: ${err.message}</p></div>`;
+    }
+  }
+
+  async function addPresentation() {
+    if (!currentUser) {
+      setText("pptStatus", "Log in first.");
+      return;
     }
 
-    async function addPresentation() {
-      if (!currentUser) {
-        setText("pptStatus", "Log in first.");
-        return;
-      }
-
-      if (!isApprovedMember(currentUser)) {
-        setText("pptStatus", "Your email is not on the approved team upload list.");
-        return;
-      }
-
-      const title = document.getElementById("pptTitle").value.trim();
-      const link = document.getElementById("pptLink").value.trim();
-      const desc = document.getElementById("pptDesc").value.trim();
-
-      if (!title || !link) {
-        setText("pptStatus", "Title and link are required.");
-        return;
-      }
-
-      if (!validUrl(link)) {
-        setText("pptStatus", "Please enter a full valid link.");
-        return;
-      }
-
-      try {
-        await addDoc(collection(db, "presentations"), {
-          title,
-          link,
-          description: desc,
-          createdByEmail: currentUser.email,
-          createdByUid: currentUser.uid,
-          createdAt: serverTimestamp()
-        });
-
-        document.getElementById("pptTitle").value = "";
-        document.getElementById("pptLink").value = "";
-        document.getElementById("pptDesc").value = "";
-        setText("pptStatus", "PowerPoint link added.");
-        await loadPresentations();
-      } catch (err) {
-        setText("pptStatus", err.message);
-      }
+    if (!isApprovedMember(currentUser)) {
+      setText("pptStatus", "Your email is not on the approved team upload list.");
+      return;
     }
 
-    async function loadPresentations() {
-      const wrap = document.getElementById("pptList");
-      wrap.innerHTML = "";
+    const title = document.getElementById("pptTitle").value.trim();
+    const link = document.getElementById("pptLink").value.trim();
+    const desc = document.getElementById("pptDesc").value.trim();
 
-      try {
-        let count = 0;
-        const q = query(collection(db, "presentations"), orderBy("createdAt", "desc"));
-        const snap = await getDocs(q);
-
-        snap.forEach(docSnap => {
-          count++;
-          const data = docSnap.data();
-
-          const card = document.createElement("div");
-          card.className = "card ppt-card";
-          card.innerHTML = `
-            <span class="tag">PowerPoint</span>
-            <h3>${data.title || "Untitled"}</h3>
-            <p>${data.description || "No description."}</p>
-            <div class="mini">Added by: ${data.createdByEmail || "Unknown"}</div>
-            <a href="${data.link}" target="_blank" rel="noopener noreferrer">Open presentation</a>
-          `;
-          wrap.appendChild(card);
-        });
-
-        setText("pptCount", count.toString());
-
-        if (count === 0) {
-          wrap.innerHTML = `<div class="card"><p>No PowerPoints yet.</p></div>`;
-        }
-      } catch (err) {
-        wrap.innerHTML = `<div class="card"><p>Error loading PowerPoints: ${err.message}</p></div>`;
-      }
+    if (!title || !link) {
+      setText("pptStatus", "Title and link are required.");
+      return;
     }
 
-    async function signup() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
-
-      if (!email || !password) {
-        setText("authStatus", "Enter email and password.");
-        return;
-      }
-
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        setText("authStatus", "Account created.");
-      } catch (err) {
-        setText("authStatus", err.message);
-      }
+    if (!validUrl(link)) {
+      setText("pptStatus", "Please enter a full valid link.");
+      return;
     }
 
-    async function login() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+    try {
+      await addDoc(collection(db, "presentations"), {
+        title,
+        link,
+        description: desc,
+        createdByEmail: currentUser.email,
+        createdByUid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
 
-      if (!email || !password) {
-        setText("authStatus", "Enter email and password.");
-        return;
-      }
+      document.getElementById("pptTitle").value = "";
+      document.getElementById("pptLink").value = "";
+      document.getElementById("pptDesc").value = "";
+      setText("pptStatus", "PowerPoint link added.");
+      await loadPresentations();
+    } catch (err) {
+      setText("pptStatus", err.message);
+    }
+  }
 
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        setText("authStatus", "Logged in.");
-      } catch (err) {
-        setText("authStatus", err.message);
+  async function loadPresentations() {
+    const wrap = document.getElementById("pptList");
+    wrap.innerHTML = "";
+
+    try {
+      let count = 0;
+      const q = query(collection(db, "presentations"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+
+      snap.forEach(docSnap => {
+        count++;
+        const data = docSnap.data();
+
+        const card = document.createElement("div");
+        card.className = "card ppt-card";
+        card.innerHTML = `
+          <span class="tag">PowerPoint</span>
+          <h3>${data.title || "Untitled"}</h3>
+          <p>${data.description || "No description."}</p>
+          <div class="mini">Added by: ${data.createdByEmail || "Unknown"}</div>
+          <a href="${data.link}" target="_blank" rel="noopener noreferrer">Open presentation</a>
+        `;
+        wrap.appendChild(card);
+      });
+
+      setText("pptCount", count.toString());
+
+      if (count === 0) {
+        wrap.innerHTML = `<div class="card"><p>No PowerPoints yet.</p></div>`;
       }
+    } catch (err) {
+      wrap.innerHTML = `<div class="card"><p>Error loading PowerPoints: ${err.message}</p></div>`;
+    }
+  }
+
+  async function signup() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      setText("authStatus", "Enter email and password.");
+      return;
     }
 
-    async function logout() {
-      try {
-        await signOut(auth);
-        setText("authStatus", "Logged out.");
-      } catch (err) {
-        setText("authStatus", err.message);
-      }
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      setText("authStatus", "Account created.");
+    } catch (err) {
+      setText("authStatus", err.message);
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+      setText("authStatus", "Enter email and password.");
+      return;
     }
 
-    document.getElementById("signupBtn").addEventListener("click", signup);
-    document.getElementById("loginBtn").addEventListener("click", login);
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-    document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
-    document.getElementById("addPptBtn").addEventListener("click", addPresentation);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      setText("authStatus", "Logged in.");
+    } catch (err) {
+      setText("authStatus", err.message);
+    }
+  }
 
-    onAuthStateChanged(auth, async (user) => {
-      currentUser = user || null;
+  async function logout() {
+    try {
+      await signOut(auth);
+      setText("authStatus", "Logged out.");
+    } catch (err) {
+      setText("authStatus", err.message);
+    }
+  }
 
-      if (user) {
-        const memberNote = isApprovedMember(user)
-          ? "Approved team uploader"
-          : "Viewer only";
-        setText("authStatus", `Logged in as: ${user.email} • ${memberNote}`);
-      } else {
-        setText("authStatus", "Not logged in");
-      }
+  document.getElementById("signupBtn").addEventListener("click", signup);
+  document.getElementById("loginBtn").addEventListener("click", login);
+  document.getElementById("logoutBtn").addEventListener("click", logout);
+  document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
+  document.getElementById("addPptBtn").addEventListener("click", addPresentation);
+
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user || null;
+
+    if (user) {
+      const memberNote = isApprovedMember(user)
+        ? "Approved team uploader"
+        : "Viewer only";
+
+      document.getElementById("authStatus").textContent =
+        `Logged in as: ${user.email} • ${memberNote}`;
+      document.getElementById("profileMini").textContent = user.email;
+      document.getElementById("profileStatus").textContent = "Logged in. Load or save your profile.";
 
       await loadProfile(user);
-    });
+    } else {
+      document.getElementById("authStatus").textContent = "Not logged in";
+      document.getElementById("profileMini").textContent = "Log in first";
+      document.getElementById("profileStatus").textContent = "You need to log in.";
+      document.getElementById("displayName").value = "";
+      document.getElementById("role").value = "";
+      document.getElementById("bio").value = "";
+      document.getElementById("profileAvatar").textContent = "?";
+    }
+  });
 
-    loadMembers();
-    loadPresentations();
-  </script>
+  loadMembers();
+  loadPresentations();
+</script>
 </body>
-</html>ƒ
+</html>
