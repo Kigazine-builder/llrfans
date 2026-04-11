@@ -1,64 +1,974 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LLR Portal</title>
+  <style>
+    :root{
+      --bg:#07111f;
+      --bg2:#0d1b2f;
+      --card:rgba(255,255,255,0.08);
+      --line:rgba(255,255,255,0.12);
+      --text:#ecf4ff;
+      --muted:#aac0de;
+      --blue:#4da3ff;
+      --blue2:#76b8ff;
+      --gold:#ffd166;
+      --green:#4ade80;
+      --danger:#ff6b6b;
+      --shadow:0 18px 50px rgba(0,0,0,0.28);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(77,163,255,0.16), transparent 22%),
+        radial-gradient(circle at left center, rgba(255,209,102,0.09), transparent 18%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      min-height:100vh;
+    }
+
+    a{color:inherit;text-decoration:none}
+    .container{width:min(1150px, calc(100% - 28px)); margin:0 auto}
+    .hidden{display:none !important}
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:100;
+      backdrop-filter:blur(10px);
+      background:rgba(7,17,31,0.82);
+      border-bottom:1px solid var(--line);
+    }
+
+    .nav{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      padding:14px 0;
+      flex-wrap:wrap;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+
+    .logo{
+      width:48px;
+      height:48px;
+      border-radius:15px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg, var(--blue), #1f6fd1);
+      box-shadow:var(--shadow);
+      font-size:24px;
+    }
+
+    .brand small{
+      display:block;
+      color:var(--muted);
+      font-size:12px;
+      margin-top:2px;
+    }
+
+    nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    nav button{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid transparent;
+      padding:10px 14px;
+      border-radius:12px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    nav button:hover,
+    nav button.active{
+      color:#fff;
+      border-color:var(--line);
+      background:rgba(255,255,255,0.05);
+    }
+
+    .hero{
+      padding:44px 0 18px;
+    }
+
+    .hero-card{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:22px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border:1px solid var(--line);
+      border-radius:30px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+
+    .pill{
+      display:inline-block;
+      padding:8px 13px;
+      border-radius:999px;
+      border:1px solid rgba(77,163,255,.25);
+      background:rgba(77,163,255,.1);
+      color:var(--blue2);
+      font-size:12px;
+      font-weight:800;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0 0 12px;
+      font-size:clamp(36px, 5vw, 58px);
+      line-height:1;
+    }
+
+    .accent{color:var(--gold)}
+
+    .hero p{
+      margin:0 0 18px;
+      color:var(--muted);
+      line-height:1.7;
+      font-size:17px;
+      max-width:700px;
+    }
+
+    .hero-stats{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:20px;
+    }
+
+    .stat{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+    }
+
+    .stat strong{
+      display:block;
+      font-size:26px;
+      margin-bottom:6px;
+    }
+
+    .stat span{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .robot-box{
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--line);
+      border-radius:28px;
+      min-height:320px;
+      position:relative;
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:var(--shadow);
+    }
+
+    .robot-box::before{
+      content:"";
+      position:absolute;
+      width:180px;
+      height:180px;
+      background:rgba(77,163,255,.2);
+      border-radius:50%;
+      filter:blur(18px);
+      top:-30px;
+      right:-20px;
+    }
+
+    .robot-box::after{
+      content:"";
+      position:absolute;
+      width:120px;
+      height:120px;
+      background:rgba(255,209,102,.15);
+      border-radius:50%;
+      filter:blur(16px);
+      bottom:-20px;
+      left:-10px;
+    }
+
+    .robot{
+      position:relative;
+      width:220px;
+      height:260px;
+    }
+
+    .head,.bodypart,.arm,.leg,.wheel,.eye,.mouth{
+      position:absolute;
+      border-radius:16px;
+    }
+
+    .head{
+      width:104px;height:84px;left:58px;top:8px;
+      background:linear-gradient(180deg,#9ed1ff,#4da3ff);
+      border:4px solid #dff0ff;
+    }
+
+    .bodypart{
+      width:142px;height:112px;left:39px;top:102px;
+      background:linear-gradient(180deg,#dce8f6,#93b6df);
+      border:4px solid #fff;
+    }
+
+    .eye{
+      width:16px;height:16px;background:#07111f;top:28px;
+    }
+
+    .eye.left{left:28px}
+    .eye.right{right:28px}
+
+    .mouth{
+      width:38px;height:9px;background:#07111f;top:56px;left:33px;border-radius:999px;
+    }
+
+    .arm{
+      width:22px;height:82px;background:#98bee8;top:116px;
+    }
+
+    .arm.left{left:8px;transform:rotate(15deg)}
+    .arm.right{right:8px;transform:rotate(-15deg)}
+
+    .leg{
+      width:26px;height:86px;background:#85afd8;top:202px;
+    }
+
+    .leg.left{left:72px}
+    .leg.right{right:72px}
+
+    .wheel{
+      width:42px;height:42px;background:#07111f;border:5px solid #9ec8f7;bottom:-18px;
+    }
+
+    .wheel.left{left:48px}
+    .wheel.right{right:48px}
+
+    .section{
+      padding:18px 0 26px;
+    }
+
+    .section-title{
+      margin-bottom:16px;
+    }
+
+    .section-title h2{
+      margin:0 0 8px;
+      font-size:32px;
+    }
+
+    .section-title p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .grid{
+      display:grid;
+      gap:18px;
+    }
+
+    .grid-2{grid-template-columns:repeat(2,1fr)}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .grid-4{grid-template-columns:repeat(4,1fr)}
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+    }
+
+    .card h3{
+      margin:0 0 10px;
+      font-size:22px;
+    }
+
+    .card p{
+      margin:0;
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .auth-wrap{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .input, textarea{
+      width:100%;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--line);
+      color:#fff;
+      border-radius:14px;
+      padding:13px 14px;
+      font-size:15px;
+      outline:none;
+      margin-top:10px;
+    }
+
+    textarea{
+      resize:vertical;
+      min-height:100px;
+      font-family:Arial, Helvetica, sans-serif;
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      border:none;
+      border-radius:14px;
+      padding:12px 18px;
+      font-weight:800;
+      cursor:pointer;
+      transition:.2s ease;
+    }
+
+    .btn:hover{
+      transform:translateY(-2px);
+      box-shadow:var(--shadow);
+    }
+
+    .btn-primary{
+      background:linear-gradient(135deg, var(--blue), #287ce3);
+      color:#fff;
+    }
+
+    .btn-secondary{
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--line);
+      color:#fff;
+    }
+
+    .btn-danger{
+      background:linear-gradient(135deg, #ff7b7b, #e04848);
+      color:#fff;
+    }
+
+    .status{
+      margin-top:14px;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid var(--line);
+      color:var(--muted);
+      line-height:1.6;
+    }
+
+    .profile-top{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      margin-bottom:14px;
+    }
+
+    .avatar{
+      width:68px;
+      height:68px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:24px;
+      font-weight:900;
+      color:#07111f;
+      background:linear-gradient(135deg, var(--blue), var(--gold));
+    }
+
+    .mini{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .member-card{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .tag{
+      display:inline-block;
+      width:max-content;
+      background:rgba(255,255,255,0.06);
+      border:1px solid var(--line);
+      color:var(--blue2);
+      padding:7px 11px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .ppt-card{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .ppt-card a{
+      color:var(--blue2);
+      font-weight:700;
+      word-break:break-word;
+    }
+
+    .footer{
+      padding:30px 0 40px;
+      color:var(--muted);
+      border-top:1px solid var(--line);
+      margin-top:24px;
+    }
+
+    @media (max-width: 900px){
+      .hero-card,.auth-wrap,.grid-2,.grid-3,.grid-4{
+        grid-template-columns:1fr;
+      }
+      .hero-stats{
+        grid-template-columns:1fr;
+      }
+    }
+  </style>
 </head>
 <body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo">🤖</div>
+        <div>
+          Legendary Lego Robotics
+          <small>LLR Kigazine-style Team Portal</small>
+        </div>
+      </div>
 
-<h1>LLR Portal 🔐</h1>
+      <nav>
+        <button class="tab-btn active" data-tab="home">Home</button>
+        <button class="tab-btn" data-tab="auth">Login</button>
+        <button class="tab-btn" data-tab="profile">Profile</button>
+        <button class="tab-btn" data-tab="members">Members</button>
+        <button class="tab-btn" data-tab="powerpoints">PowerPoints</button>
+      </nav>
+    </div>
+  </header>
 
-<input id="email" placeholder="Email"><br><br>
-<input id="password" type="password" placeholder="Password"><br><br>
+  <main class="container">
+    <section id="home" class="tab-section">
+      <div class="hero">
+        <div class="hero-card">
+          <div>
+            <div class="pill">BUILD • CODE • SHARE • COMPETE</div>
+            <h1>Welcome to <span class="accent">LLR</span></h1>
+            <p>
+              This is the Legendary Lego Robotics portal for team members, profiles,
+              and shared presentation links. It gives your team a home base that feels
+              more like a real platform instead of a plain website.
+            </p>
 
-<button onclick="signup()">Sign Up</button>
-<button onclick="login()">Login</button>
-<button onclick="logout()">Logout</button>
+            <div class="hero-stats">
+              <div class="stat">
+                <strong id="memberCount">0</strong>
+                <span>Profiles saved</span>
+              </div>
+              <div class="stat">
+                <strong id="pptCount">0</strong>
+                <span>Shared PowerPoints</span>
+              </div>
+              <div class="stat">
+                <strong>LLR</strong>
+                <span>Legendary Lego Robotics</span>
+              </div>
+            </div>
+          </div>
 
-<p id="status">Not logged in</p>
+          <div class="robot-box">
+            <div class="robot">
+              <div class="head">
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+                <div class="mouth"></div>
+              </div>
+              <div class="bodypart"></div>
+              <div class="arm left"></div>
+              <div class="arm right"></div>
+              <div class="leg left"></div>
+              <div class="leg right"></div>
+              <div class="wheel left"></div>
+              <div class="wheel right"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    <section id="auth" class="tab-section hidden section">
+      <div class="section-title">
+        <h2>Login / Sign Up</h2>
+        <p>Create an account for your team portal, then log in to save your profile.</p>
+      </div>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAjrj8IQ66Hy1pZ-k6aYHgrTsSKOMNmlPI",
-    authDomain: "llrfans.firebaseapp.com",
-    projectId: "llrfans",
-    storageBucket: "llrfans.firebasestorage.app",
-    messagingSenderId: "807887411037",
-    appId: "1:807887411037:web:6d6ea6a2e363130509fab4"
-  };
+      <div class="auth-wrap">
+        <div class="card">
+          <h3>Account Access</h3>
+          <input id="email" class="input" type="email" placeholder="Email">
+          <input id="password" class="input" type="password" placeholder="Password">
+          <div class="row" style="margin-top:14px;">
+            <button class="btn btn-primary" id="signupBtn">Sign Up</button>
+            <button class="btn btn-secondary" id="loginBtn">Login</button>
+            <button class="btn btn-danger" id="logoutBtn">Logout</button>
+          </div>
+          <div class="status" id="authStatus">Not logged in</div>
+        </div>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+        <div class="card">
+          <h3>Who can add PowerPoints?</h3>
+          <p>
+            Only approved LLR team emails can add PowerPoint links. Everyone logged in can
+            view the list, but only team members on your approved email list can post.
+          </p>
+        </div>
+      </div>
+    </section>
 
-  window.signup = function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+    <section id="profile" class="tab-section hidden section">
+      <div class="section-title">
+        <h2>Your Profile</h2>
+        <p>Save your team name, role, and short bio.</p>
+      </div>
 
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(() => alert("Account created"))
-      .catch(e => alert(e.message));
-  }
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="profile-top">
+            <div class="avatar" id="profileAvatar">?</div>
+            <div>
+              <h3 style="margin:0;" id="profileHeading">Your Profile</h3>
+              <div class="mini" id="profileMini">Log in first</div>
+            </div>
+          </div>
 
-  window.login = function() {
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
+          <input id="displayName" class="input" placeholder="Your name">
+          <input id="role" class="input" placeholder="Role (Builder, Programmer, Captain...)">
+          <textarea id="bio" placeholder="Short bio"></textarea>
 
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => alert("Logged in"))
-      .catch(e => alert(e.message));
-  }
+          <div class="row" style="margin-top:14px;">
+            <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+          </div>
 
-  window.logout = function() {
-    signOut(auth);
-  }
+          <div class="status" id="profileStatus">No profile loaded yet.</div>
+        </div>
 
-  onAuthStateChanged(auth, user => {
-    document.getElementById("status").innerText =
-      user ? "Logged in as: " + user.email : "Not logged in";
-  });
-</script>
+        <div class="card">
+          <h3>Profile Tips</h3>
+          <p>
+            Keep your role simple and your bio short. Example: “Lead builder for attachments and mission design.”
+          </p>
+        </div>
+      </div>
+    </section>
 
+    <section id="members" class="tab-section hidden section">
+      <div class="section-title">
+        <h2>Members</h2>
+        <p>All saved team profiles appear here.</p>
+      </div>
+
+      <div class="grid grid-3" id="membersList"></div>
+    </section>
+
+    <section id="powerpoints" class="tab-section hidden section">
+      <div class="section-title">
+        <h2>Shared PowerPoints</h2>
+        <p>Use Google Drive links for presentations. Approved LLR emails can add links.</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Add Presentation Link</h3>
+          <input id="pptTitle" class="input" placeholder="Presentation title">
+          <input id="pptLink" class="input" placeholder="Google Drive or PowerPoint link">
+          <textarea id="pptDesc" placeholder="Short description"></textarea>
+          <div class="row" style="margin-top:14px;">
+            <button class="btn btn-primary" id="addPptBtn">Add PowerPoint</button>
+          </div>
+          <div class="status" id="pptStatus">Log in to post.</div>
+        </div>
+
+        <div class="card">
+          <h3>How to share from Drive</h3>
+          <p>
+            Upload the file to your LLR Google Drive folder, set the file or folder to view,
+            then paste the share link here.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-3" id="pptList" style="margin-top:18px;"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      © 2026 Legendary Lego Robotics • LLR Portal
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc,
+      collection,
+      addDoc,
+      getDocs,
+      serverTimestamp,
+      query,
+      orderBy
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjrj8IQ66Hy1pZ-k6aYHgrTsSKOMNmlPI",
+      authDomain: "llrfans.firebaseapp.com",
+      projectId: "llrfans",
+      storageBucket: "llrfans.firebasestorage.app",
+      messagingSenderId: "807887411037",
+      appId: "1:807887411037:web:6d6ea6a2e363130509fab4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+
+    const approvedEmails = [
+      "ethan02px2035@saschina.org",
+      "lukas01px2035@saschina.org"
+    ];
+
+    const tabButtons = document.querySelectorAll(".tab-btn");
+    const sections = document.querySelectorAll(".tab-section");
+
+    function showTab(tabId) {
+      sections.forEach(section => {
+        section.classList.toggle("hidden", section.id !== tabId);
+      });
+
+      tabButtons.forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.tab === tabId);
+      });
+    }
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    });
+
+    function setText(id, text) {
+      document.getElementById(id).textContent = text;
+    }
+
+    function getInitials(name, email) {
+      if (name && name.trim()) return name.trim().charAt(0).toUpperCase();
+      if (email && email.trim()) return email.trim().charAt(0).toUpperCase();
+      return "?";
+    }
+
+    function isApprovedMember(user) {
+      if (!user || !user.email) return false;
+      return approvedEmails.includes(user.email.toLowerCase());
+    }
+
+    function validUrl(str) {
+      try {
+        new URL(str);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    async function loadProfile(user) {
+      if (!user) {
+        setText("profileHeading", "Your Profile");
+        setText("profileMini", "Log in first");
+        setText("profileStatus", "You need to log in.");
+        setText("profileAvatar", "?");
+        document.getElementById("displayName").value = "";
+        document.getElementById("role").value = "";
+        document.getElementById("bio").value = "";
+        return;
+      }
+
+      const ref = doc(db, "members", user.uid);
+      const snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        const data = snap.data();
+        document.getElementById("displayName").value = data.displayName || "";
+        document.getElementById("role").value = data.role || "";
+        document.getElementById("bio").value = data.bio || "";
+        setText("profileHeading", data.displayName || "Your Profile");
+        setText("profileMini", user.email);
+        setText("profileAvatar", getInitials(data.displayName, user.email));
+        setText("profileStatus", "Profile loaded.");
+      } else {
+        setText("profileHeading", "Your Profile");
+        setText("profileMini", user.email);
+        setText("profileAvatar", getInitials("", user.email));
+        setText("profileStatus", "No saved profile yet.");
+      }
+    }
+
+    async function saveProfile() {
+      if (!currentUser) {
+        setText("profileStatus", "Log in first.");
+        return;
+      }
+
+      const displayName = document.getElementById("displayName").value.trim();
+      const role = document.getElementById("role").value.trim();
+      const bio = document.getElementById("bio").value.trim();
+
+      if (!displayName || !role) {
+        setText("profileStatus", "Name and role are required.");
+        return;
+      }
+
+      try {
+        await setDoc(doc(db, "members", currentUser.uid), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName,
+          role,
+          bio,
+          updatedAt: serverTimestamp()
+        });
+
+        setText("profileHeading", displayName);
+        setText("profileMini", currentUser.email);
+        setText("profileAvatar", getInitials(displayName, currentUser.email));
+        setText("profileStatus", "Profile saved.");
+        await loadMembers();
+      } catch (err) {
+        setText("profileStatus", err.message);
+      }
+    }
+
+    async function loadMembers() {
+      const wrap = document.getElementById("membersList");
+      wrap.innerHTML = "";
+
+      try {
+        const snap = await getDocs(collection(db, "members"));
+        let count = 0;
+
+        snap.forEach(docSnap => {
+          count++;
+          const data = docSnap.data();
+
+          const card = document.createElement("div");
+          card.className = "card member-card";
+          card.innerHTML = `
+            <div class="profile-top" style="margin-bottom:4px;">
+              <div class="avatar">${getInitials(data.displayName, data.email)}</div>
+              <div>
+                <h3 style="margin:0;">${data.displayName || "Unnamed Member"}</h3>
+                <div class="mini">${data.email || ""}</div>
+              </div>
+            </div>
+            <span class="tag">${data.role || "Member"}</span>
+            <p>${data.bio || "No bio yet."}</p>
+          `;
+          wrap.appendChild(card);
+        });
+
+        setText("memberCount", count.toString());
+
+        if (count === 0) {
+          wrap.innerHTML = `<div class="card"><p>No members yet. Save a profile first.</p></div>`;
+        }
+      } catch (err) {
+        wrap.innerHTML = `<div class="card"><p>Error loading members: ${err.message}</p></div>`;
+      }
+    }
+
+    async function addPresentation() {
+      if (!currentUser) {
+        setText("pptStatus", "Log in first.");
+        return;
+      }
+
+      if (!isApprovedMember(currentUser)) {
+        setText("pptStatus", "Your email is not on the approved team upload list.");
+        return;
+      }
+
+      const title = document.getElementById("pptTitle").value.trim();
+      const link = document.getElementById("pptLink").value.trim();
+      const desc = document.getElementById("pptDesc").value.trim();
+
+      if (!title || !link) {
+        setText("pptStatus", "Title and link are required.");
+        return;
+      }
+
+      if (!validUrl(link)) {
+        setText("pptStatus", "Please enter a full valid link.");
+        return;
+      }
+
+      try {
+        await addDoc(collection(db, "presentations"), {
+          title,
+          link,
+          description: desc,
+          createdByEmail: currentUser.email,
+          createdByUid: currentUser.uid,
+          createdAt: serverTimestamp()
+        });
+
+        document.getElementById("pptTitle").value = "";
+        document.getElementById("pptLink").value = "";
+        document.getElementById("pptDesc").value = "";
+        setText("pptStatus", "PowerPoint link added.");
+        await loadPresentations();
+      } catch (err) {
+        setText("pptStatus", err.message);
+      }
+    }
+
+    async function loadPresentations() {
+      const wrap = document.getElementById("pptList");
+      wrap.innerHTML = "";
+
+      try {
+        let count = 0;
+        const q = query(collection(db, "presentations"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(q);
+
+        snap.forEach(docSnap => {
+          count++;
+          const data = docSnap.data();
+
+          const card = document.createElement("div");
+          card.className = "card ppt-card";
+          card.innerHTML = `
+            <span class="tag">PowerPoint</span>
+            <h3>${data.title || "Untitled"}</h3>
+            <p>${data.description || "No description."}</p>
+            <div class="mini">Added by: ${data.createdByEmail || "Unknown"}</div>
+            <a href="${data.link}" target="_blank" rel="noopener noreferrer">Open presentation</a>
+          `;
+          wrap.appendChild(card);
+        });
+
+        setText("pptCount", count.toString());
+
+        if (count === 0) {
+          wrap.innerHTML = `<div class="card"><p>No PowerPoints yet.</p></div>`;
+        }
+      } catch (err) {
+        wrap.innerHTML = `<div class="card"><p>Error loading PowerPoints: ${err.message}</p></div>`;
+      }
+    }
+
+    async function signup() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        setText("authStatus", "Enter email and password.");
+        return;
+      }
+
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+        setText("authStatus", "Account created.");
+      } catch (err) {
+        setText("authStatus", err.message);
+      }
+    }
+
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        setText("authStatus", "Enter email and password.");
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        setText("authStatus", "Logged in.");
+      } catch (err) {
+        setText("authStatus", err.message);
+      }
+    }
+
+    async function logout() {
+      try {
+        await signOut(auth);
+        setText("authStatus", "Logged out.");
+      } catch (err) {
+        setText("authStatus", err.message);
+      }
+    }
+
+    document.getElementById("signupBtn").addEventListener("click", signup);
+    document.getElementById("loginBtn").addEventListener("click", login);
+    document.getElementById("logoutBtn").addEventListener("click", logout);
+    document.getElementById("saveProfileBtn").addEventListener("click", saveProfile);
+    document.getElementById("addPptBtn").addEventListener("click", addPresentation);
+
+    onAuthStateChanged(auth, async (user) => {
+      currentUser = user || null;
+
+      if (user) {
+        const memberNote = isApprovedMember(user)
+          ? "Approved team uploader"
+          : "Viewer only";
+        setText("authStatus", `Logged in as: ${user.email} • ${memberNote}`);
+      } else {
+        setText("authStatus", "Not logged in");
+      }
+
+      await loadProfile(user);
+    });
+
+    loadMembers();
+    loadPresentations();
+  </script>
 </body>
-</html>
+</html>ƒ
