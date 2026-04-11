@@ -1,16 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>LLR</title>
+  <title>LLR Portal</title>
 </head>
 <body>
-  <h1>Legendary Lego Robotics</h1>
-  <p>Hello from LLR!</p>
+
+<h1>LLR Portal 🔐</h1>
+
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+
+<button onclick="signup()">Sign Up</button>
+<button onclick="login()">Login</button>
+<button onclick="logout()">Logout</button>
+
+<p id="status">Not logged in</p>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAuth } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-  import { getStorage } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-storage.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAjrj8IQ66Hy1pZ-k6aYHgrTsSKOMNmlPI",
@@ -23,10 +31,34 @@
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
 
-  console.log("Firebase connected 🚀");
+  window.signup = function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => alert("Account created"))
+      .catch(e => alert(e.message));
+  }
+
+  window.login = function() {
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(() => alert("Logged in"))
+      .catch(e => alert(e.message));
+  }
+
+  window.logout = function() {
+    signOut(auth);
+  }
+
+  onAuthStateChanged(auth, user => {
+    document.getElementById("status").innerText =
+      user ? "Logged in as: " + user.email : "Not logged in";
+  });
 </script>
+
 </body>
 </html>
