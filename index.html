@@ -680,16 +680,23 @@
   const tabButtons = document.querySelectorAll(".tab-btn");
   const sections = document.querySelectorAll(".tab-section");
 
-  function showTab(tabId) {
-    sections.forEach(section => {
-      section.classList.toggle("hidden", section.id !== tabId);
-    });
+  async function showTab(tabId) {
+  sections.forEach(section => {
+    section.classList.toggle("hidden", section.id !== tabId);
+  });
 
-    tabButtons.forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.tab === tabId);
-    });
+  tabButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tabId);
+  });
+
+  if (tabId === "members") {
+    await loadMembers();
   }
 
+  if (tabId === "powerpoints") {
+    await loadPresentations();
+  }
+}
   tabButtons.forEach(btn => {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });
@@ -977,8 +984,7 @@
     }
   });
 
-  loadMembers();
-  loadPresentations();
+  
 </script>
 </body>
 </html>
